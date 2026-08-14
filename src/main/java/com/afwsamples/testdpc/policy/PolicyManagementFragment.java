@@ -123,6 +123,8 @@ import com.afwsamples.testdpc.common.preference.DpcPreferenceBase;
 import com.afwsamples.testdpc.common.preference.DpcPreferenceHelper;
 import com.afwsamples.testdpc.common.preference.DpcSwitchPreference;
 import com.afwsamples.testdpc.comp.BindDeviceAdminFragment;
+import com.afwsamples.testdpc.parentalcontrol.NetworkKillSwitchFragment;
+import com.afwsamples.testdpc.parentalcontrol.ScreenTimeFragment;
 import com.afwsamples.testdpc.policy.blockuninstallation.BlockUninstallationInfoArrayAdapter;
 import com.afwsamples.testdpc.policy.certificate.DelegatedCertInstallerFragment;
 import com.afwsamples.testdpc.policy.keyguard.LockScreenPolicyFragment.Container;
@@ -375,6 +377,8 @@ public class PolicyManagementFragment extends BaseSearchablePolicyPreferenceFrag
   private static final String SET_PERMISSION_POLICY_KEY = "set_permission_policy";
   private static final String SET_SHORT_SUPPORT_MESSAGE_KEY = "set_short_support_message";
   private static final String SET_USER_RESTRICTIONS_KEY = "set_user_restrictions";
+  private static final String SCREEN_TIME_LIMITS_KEY = "screen_time_limits";
+  private static final String NETWORK_KILL_SWITCH_KEY = "network_kill_switch";
   private static final String SET_USER_RESTRICTIONS_PARENT_KEY = "set_user_restrictions_parent";
   private static final String SHOW_WIFI_MAC_ADDRESS_KEY = "show_wifi_mac_address";
   private static final String START_KIOSK_MODE = "start_kiosk_mode";
@@ -791,6 +795,8 @@ public class PolicyManagementFragment extends BaseSearchablePolicyPreferenceFrag
     mUserRestrictionsParentPreference =
         (DpcPreference) findPreference(SET_USER_RESTRICTIONS_PARENT_KEY);
     mUserRestrictionsParentPreference.setOnPreferenceClickListener(this);
+    findPreference(SCREEN_TIME_LIMITS_KEY).setOnPreferenceClickListener(this);
+    findPreference(NETWORK_KILL_SWITCH_KEY).setOnPreferenceClickListener(this);
 
     findPreference(REBOOT_KEY).setOnPreferenceClickListener(this);
     findPreference(SET_SHORT_SUPPORT_MESSAGE_KEY).setOnPreferenceClickListener(this);
@@ -1343,6 +1349,12 @@ public class PolicyManagementFragment extends BaseSearchablePolicyPreferenceFrag
       return true;
     } else if (SET_USER_RESTRICTIONS_PARENT_KEY.equals(key)) {
       showFragment(new UserRestrictionsParentDisplayFragment());
+      return true;
+    } else if (SCREEN_TIME_LIMITS_KEY.equals(key)) {
+      showFragment(new ScreenTimeFragment());
+      return true;
+    } else if (NETWORK_KILL_SWITCH_KEY.equals(key)) {
+      showFragment(new NetworkKillSwitchFragment());
       return true;
     } else if (REBOOT_KEY.equals(key)) {
       reboot();

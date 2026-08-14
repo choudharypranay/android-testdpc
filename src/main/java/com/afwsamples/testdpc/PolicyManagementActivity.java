@@ -31,6 +31,7 @@ import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import com.afwsamples.testdpc.common.DumpableActivity;
 import com.afwsamples.testdpc.common.OnBackPressedHandler;
+import com.afwsamples.testdpc.parentalcontrol.ParentalControlService;
 import com.afwsamples.testdpc.policy.PolicyManagementFragment;
 import com.afwsamples.testdpc.search.PolicySearchFragment;
 import java.io.FileDescriptor;
@@ -56,6 +57,9 @@ public class PolicyManagementActivity extends DumpableActivity
   public void onCreate(Bundle savedInstanceState) {
     super.onCreate(savedInstanceState);
     setContentView(R.layout.activity_main);
+    // Force stopping the app or updating it kills the parental control service without the system
+    // bringing it back. Opening the app is the natural moment to put it on its feet again.
+    ParentalControlService.startIfNeeded(this);
     if (savedInstanceState == null) {
       getFragmentManager()
           .beginTransaction()

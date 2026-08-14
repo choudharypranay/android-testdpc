@@ -1,0 +1,223 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Parental controls</title>
+<style>
+  :root {
+    --bg: #f4f5f7; --card: #ffffff; --ink: #16191d; --muted: #5f6672;
+    --line: #dfe3e8; --accent: #1a56db; --danger: #b3261e; --ok: #146c2e;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #14171a; --card: #1e2226; --ink: #e9ecef; --muted: #a3abb5;
+      --line: #333a41; --accent: #6f9bff; --danger: #f2848a; --ok: #7bd894;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; padding: 16px; background: var(--bg); color: var(--ink);
+    font: 16px/1.45 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    -webkit-text-size-adjust: 100%;
+  }
+  h1 { font-size: 1.25rem; margin: 4px 0 16px; }
+  h2 { font-size: .95rem; margin: 0 0 10px; color: var(--muted); font-weight: 600;
+       text-transform: uppercase; letter-spacing: .04em; }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 14px;
+          padding: 16px; margin-bottom: 14px; }
+  #status, #qhState { font-size: 1.05rem; font-weight: 600; }
+  #status.blocked, #qhState.blocked { color: var(--danger); }
+  #status.open { color: var(--ok); }
+  .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 14px; }
+  button, .chip {
+    font: inherit; border-radius: 12px; border: 1px solid var(--line);
+    background: var(--card); color: var(--ink); padding: 14px 10px; cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .chip.sel { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 600; }
+  button.primary { width: 100%; background: var(--accent); border-color: var(--accent);
+                   color: #fff; font-weight: 600; padding: 16px; font-size: 1.05rem; }
+  button.plain { width: 100%; margin-top: 10px; }
+  button:disabled { opacity: .5; }
+  table { width: 100%; border-collapse: collapse; font-size: .95rem; }
+  td { padding: 6px 0; border-bottom: 1px solid var(--line); }
+  td:last-child { text-align: right; color: var(--muted); font-variant-numeric: tabular-nums; }
+  .why { color: var(--danger); font-size: .85rem; }
+  tr:last-child td { border-bottom: 0; }
+  .note { color: var(--muted); font-size: .85rem; margin-top: 10px; }
+  #result { margin-top: 12px; font-weight: 600; }
+  #result.ok { color: var(--ok); }
+  #result.bad { color: var(--danger); }
+</style>
+</head>
+<body>
+<h1>Parental controls</h1>
+
+<div class="card">
+  <h2>Network</h2>
+  <div id="status">Checking…</div>
+  <div class="note" id="statusDetail"></div>
+</div>
+
+<div class="card">
+  <h2>Turn the network off for</h2>
+  <div class="grid" id="choices">
+    <button class="chip" data-min="5">5 min</button>
+    <button class="chip" data-min="15">15 min</button>
+    <button class="chip sel" data-min="30">30 min</button>
+    <button class="chip" data-min="60">1 hour</button>
+    <button class="chip" data-min="120">2 hours</button>
+    <button class="chip" data-min="0">Until I<br>restore it</button>
+  </div>
+  <button class="primary" id="block">Turn the network off</button>
+  <div id="result"></div>
+  <div class="note">
+    Wi-Fi and mobile data are switched off, so the phone leaves this network and this page
+    stops working. That is how it is confirmed: the page waits five seconds and checks that
+    the phone has gone quiet. Both radios come back on by themselves when the time is up. To
+    end a block early, open TestDPC on the phone itself.
+  </div>
+</div>
+
+<div class="card">
+  <h2>Quiet hours</h2>
+  <div id="qhState">&hellip;</div>
+  <button class="plain" id="qhToggle" disabled>&hellip;</button>
+  <div class="note">
+    Blocks every monitored app between these hours. The hours themselves, the caps and which apps
+    are watched are set in TestDPC on the phone.
+  </div>
+</div>
+
+<div class="card">
+  <h2>Screen time today</h2>
+  <table id="usage"><tr><td>Loading…</td><td></td></tr></table>
+  <button class="plain" id="reset">Reset today's screen time</button>
+</div>
+
+<script>
+var TOKEN = "__TOKEN__";
+var minutes = 30;
+
+function url(path) { return path + (TOKEN ? (path.indexOf("?") < 0 ? "?" : "&") + "token=" + TOKEN : ""); }
+function el(id) { return document.getElementById(id); }
+
+document.querySelectorAll(".chip").forEach(function (c) {
+  c.onclick = function () {
+    document.querySelectorAll(".chip").forEach(function (o) { o.classList.remove("sel"); });
+    c.classList.add("sel");
+    minutes = parseInt(c.dataset.min, 10);
+  };
+});
+
+function refresh() {
+  fetch(url("/status"), { cache: "no-store" }).then(function (r) { return r.json(); }).then(function (d) {
+    var s = el("status");
+    if (d.network.blocked) {
+      s.textContent = "Blocked";
+      s.className = "blocked";
+      var until = d.network.blockedUntilEpochMillis;
+      el("statusDetail").textContent = until
+        ? "Comes back at " + new Date(until).toLocaleTimeString()
+        : "Stays off until you restore it";
+    } else {
+      s.textContent = "Online";
+      s.className = "open";
+      el("statusDetail").textContent = "";
+    }
+    var w = d.screenTime.blockedWindow || {};
+    el("qhState").textContent = w.enabled
+      ? w.start + " to " + w.end + (w.active ? " — blocking right now" : " — not in force yet")
+      : "Off";
+    el("qhState").className = w.enabled && w.active ? "blocked" : "";
+    var qh = el("qhToggle");
+    qh.textContent = w.enabled ? "Turn quiet hours off" : "Turn quiet hours on";
+    qh.dataset.next = w.enabled ? "false" : "true";
+    qh.disabled = false;
+
+    var t = el("usage"), rows = "";
+    var apps = d.screenTime.apps || [];
+    if (!apps.length) {
+      rows = "<tr><td>No apps are being monitored</td><td></td></tr>";
+    } else {
+      apps.forEach(function (a) {
+        // Say why, or "blocked" next to "0 min" reads like a contradiction.
+        var why = a.blocked ? "<br><span class=\"why\">blocked — " + a.reason + "</span>" : "";
+        var right = a.limitMinutes
+          ? a.usedMinutes + " / " + a.limitMinutes + " min"
+          : a.usedMinutes + " min";
+        rows += "<tr><td>" + a.label + why + "</td><td>" + right + "</td></tr>";
+      });
+      rows += "<tr><td><b>Combined</b></td><td><b>" + d.screenTime.combinedUsedMinutes +
+              " / " + (d.screenTime.combinedLimitMinutes || "∞") + " min</b></td></tr>";
+    }
+    t.innerHTML = rows;
+  }).catch(function () {
+    el("status").textContent = "Cannot reach the phone";
+    el("status").className = "blocked";
+  });
+}
+
+function say(msg, good) {
+  var r = el("result");
+  r.textContent = msg;
+  r.className = good === undefined ? "" : (good ? "ok" : "bad");
+}
+
+el("block").onclick = function () {
+  el("block").disabled = true;
+  say("Sending…");
+  fetch(url("/network/off?minutes=" + minutes), { method: "POST" })
+    .then(function (r) {
+      if (!r.ok) { throw new Error("phone answered " + r.status); }
+      say("Accepted. Waiting five seconds, then checking…");
+      // The phone answers first and cuts the network a second later, so the only honest
+      // confirmation is that it stops answering.
+      return new Promise(function (done) { setTimeout(done, 5000); });
+    })
+    .then(function () {
+      return fetch(url("/ping"), { cache: "no-store" })
+        .then(function () { return true; })
+        .catch(function () { return false; });
+    })
+    .then(function (stillUp) {
+      if (stillUp) {
+        say("The phone still answers, so the network did NOT go down.", false);
+      } else {
+        say(minutes ? "Done. The network is off for " + minutes + " minutes."
+                    : "Done. The network is off until you restore it.", true);
+      }
+      el("block").disabled = false;
+    })
+    .catch(function (e) {
+      say("Failed: " + e.message, false);
+      el("block").disabled = false;
+    });
+};
+
+el("qhToggle").onclick = function () {
+  var next = el("qhToggle").dataset.next;
+  el("qhToggle").disabled = true;
+  fetch(url("/screentime/quiethours?enabled=" + next), { method: "POST" })
+    .then(function (r) { return r.json(); })
+    .then(function () {
+      say(next === "true" ? "Quiet hours on." : "Quiet hours off.", true);
+      // The phone applies this on its main thread, so give it a moment before re-reading.
+      setTimeout(refresh, 600);
+    })
+    .catch(function () { say("Could not reach the phone.", false); refresh(); });
+};
+
+el("reset").onclick = function () {
+  fetch(url("/screentime/reset"), { method: "POST" })
+    .then(function (r) { return r.json(); })
+    .then(function () { say("Today\u2019s screen time was reset.", true); refresh(); })
+    .catch(function () { say("Could not reach the phone.", false); });
+};
+
+refresh();
+setInterval(refresh, 10000);
+</script>
+</body>
+</html>

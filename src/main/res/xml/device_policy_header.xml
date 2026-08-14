@@ -37,6 +37,19 @@
         testdpc:permission="android.permission.MANAGE_DEVICE_POLICY_CERTIFICATES"
         testdpc:minSdkVersion="S" />
 
+    <PreferenceCategory android:title="@string/parental_controls_category">
+        <com.afwsamples.testdpc.common.preference.DpcPreference
+            android:key="screen_time_limits"
+            android:title="@string/screen_time_title"
+            testdpc:admin="deviceOwner"
+            testdpc:minSdkVersion="N" />
+        <com.afwsamples.testdpc.common.preference.DpcPreference
+            android:key="network_kill_switch"
+            android:title="@string/network_kill_switch_title"
+            testdpc:admin="deviceOwner"
+            testdpc:minSdkVersion="N" />
+    </PreferenceCategory>
+
     <PreferenceCategory android:title="@string/accessibility_title">
         <com.afwsamples.testdpc.common.preference.DpcPreference
             android:key="set_accessibility_services"

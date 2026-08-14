@@ -186,6 +186,16 @@ java_library(
 #)
 
 java_test(
+    name = "ScreenTimeCalculatorTest",
+    size = "small",
+    srcs = ["src/test/java/com/afwsamples/testdpc/parentalcontrol/ScreenTimeCalculatorTest.java"],
+    deps = [
+        ":test_deps",
+        ":testdpc_lib",
+    ],
+)
+
+java_test(
     name = "BooleanParserTest",
     size = "small",
     srcs = ["src/test/java/com/afwsamples/testdpc/util/flags/BooleanParserTest.java"],

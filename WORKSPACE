@@ -98,8 +98,8 @@ http_archive(
     build_file = "@//:setupcompat.BUILD",
     # Patch source code to avoid "cannot infer type arguments for Creator<T>" in 2 files
     patch_cmds = [
-        "ed -s main/java/com/google/android/setupcompat/logging/ScreenKey.java <<<$',s/Creator<>/Creator<ScreenKey>/g\nw'",
-        "ed -s main/java/com/google/android/setupcompat/logging/SetupMetric.java <<<$',s/Creator<>/Creator<SetupMetric>/g\nw'",
+        "sed -i 's/Creator<>/Creator<ScreenKey>/g' main/java/com/google/android/setupcompat/logging/ScreenKey.java",
+        "sed -i 's/Creator<>/Creator<SetupMetric>/g' main/java/com/google/android/setupcompat/logging/SetupMetric.java",
     ],
     url = "https://android.googlesource.com/platform/external/setupcompat/+archive/2ce41c8f4de550b5186233cec0a722dd0ffd9a84.tar.gz",
 )

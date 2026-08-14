@@ -1318,4 +1318,101 @@
     <string name="credential_manager_policy_applied_toast">Policy has been applied</string>
     <string name="credential_manager_policy_title">Enter package name of Credential Provider</string>
 
+    <!--  Strings for the parental control foreground service  -->
+    <string name="parental_control_title">Parental controls</string>
+    <string name="parental_control_status_idle">Watching</string>
+    <string name="parental_control_status_screen_time">Screen time %1$d/%2$d min</string>
+    <string name="parental_control_status_screen_time_no_cap">Screen time %1$d min</string>
+    <string name="parental_control_status_network_off">Network blocked</string>
+    <string name="parental_control_status_server">Control server on port %1$d</string>
+
+    <!--  Strings for screen time limits  -->
+    <string name="parental_controls_category">Parental controls</string>
+    <string name="screen_time_title">Screen time limits</string>
+    <string name="screen_time_enabled">Enforce screen time limits</string>
+    <string name="screen_time_enabled_summary">Suspends monitored apps once they run out of time or the blocked hours start</string>
+    <string name="screen_time_usage_access">Usage access</string>
+    <string name="screen_time_usage_access_granted">Granted</string>
+    <string name="screen_time_usage_access_missing">Not granted — foreground time cannot be measured. Tap to open settings, or run: adb shell appops set com.afwsamples.testdpc android:get_usage_stats allow</string>
+    <string name="screen_time_usage_access_no_settings">This device has no usage access settings screen</string>
+    <string name="screen_time_limits_category">Limits</string>
+    <string name="screen_time_monitored_apps">Monitored apps</string>
+    <string name="screen_time_monitored_apps_none">No apps selected</string>
+    <string name="screen_time_monitored_apps_summary">%1$d selected: %2$s</string>
+    <string name="screen_time_per_app_limit">Daily limit per app</string>
+    <string name="screen_time_combined_limit">Combined daily limit</string>
+    <string name="screen_time_minutes_hint">Minutes per day. Leave empty or enter 0 for no limit.</string>
+    <string name="screen_time_invalid_minutes">Enter a whole number of minutes</string>
+    <string name="screen_time_no_limit">No limit</string>
+    <string name="screen_time_window_category">Blocked hours</string>
+    <string name="screen_time_window_enabled">Block monitored apps during set hours</string>
+    <string name="screen_time_window_start">Start</string>
+    <string name="screen_time_window_end">End</string>
+    <string name="screen_time_status_category">Today</string>
+    <string name="screen_time_today">Usage so far</string>
+    <string name="screen_time_today_no_access">Usage access is required before time can be measured</string>
+    <string name="screen_time_today_combined">Combined: %1$s</string>
+    <string name="screen_time_today_since">Counting since %1$s</string>
+    <string name="screen_time_reason_window">blocked, quiet hours</string>
+    <string name="screen_time_reason_window_short">quiet hours</string>
+    <string name="screen_time_reason_per_app_short">app limit reached</string>
+    <string name="screen_time_reason_combined_short">combined limit reached</string>
+    <string name="screen_time_reason_per_app">blocked, app limit reached</string>
+    <string name="screen_time_reason_combined">blocked, combined limit reached</string>
+    <string name="screen_time_reset">Reset today\'s usage</string>
+    <string name="screen_time_reset_summary">Starts a fresh allowance from now and unblocks the monitored apps</string>
+    <string name="screen_time_reset_confirm">Give back a full allowance for the rest of today?</string>
+    <string name="screen_time_reset_done">Usage reset</string>
+    <string name="screen_time_tamper">Tamper protection</string>
+    <string name="screen_time_tamper_summary">Pins the clock to network time and blocks force stop, uninstall, safe mode and manual date changes</string>
+    <string name="screen_time_filter_hint">Filter by name or package</string>
+    <string name="screen_time_show_selected_only">Selected only</string>
+    <string name="screen_time_clear_selection">Clear</string>
+    <string name="screen_time_selected_count">%1$d of %2$d apps selected</string>
+
+    <!--
+      Shown to the person using the phone when an app is blocked. The system's own
+      "Blocked by work policy" dialog cannot be reworded by a device owner, so this friendlier
+      note is what greets them first. Edit these freely; emoji are fine.
+    -->
+    <string name="blocked_notice_channel">Screen time notices</string>
+    <string name="blocked_notice_window_title">🌙 Time for bed</string>
+    <string name="blocked_notice_window_text">%1$s is having a rest until %2$s. Sweet dreams! 💤</string>
+    <string name="blocked_notice_app_title">⏰ That\'s all for today</string>
+    <string name="blocked_notice_app_text">%1$s has used up its time for today. It will be back tomorrow morning ☀️</string>
+    <string name="blocked_notice_combined_title">🌟 Screen time all used up</string>
+    <string name="blocked_notice_combined_text">You have used all of today\'s screen time. See you tomorrow! ☀️</string>
+
+    <!--  Strings for the network kill switch  -->
+    <string name="network_kill_switch_title">Network kill switch</string>
+    <string name="network_kill_switch_control_category">Control</string>
+    <string name="network_kill_switch_status">Status</string>
+    <string name="network_kill_switch_status_inactive">Network is not blocked</string>
+    <string name="network_kill_switch_status_until">Blocked until %1$s (%2$s)</string>
+    <string name="network_kill_switch_status_indefinite">Blocked until released by hand (%1$s)</string>
+    <string name="network_kill_switch_block_now">Block the network now</string>
+    <string name="network_kill_switch_block_now_summary">Switches Wi-Fi and mobile data off; both come back on when the time is up</string>
+    <string name="network_kill_switch_block_now_prompt">For how many minutes? Leave empty to block until released by hand.</string>
+    <string name="network_kill_switch_minutes_hint">Minutes</string>
+    <string name="network_kill_switch_bad_minutes">Enter a whole number of minutes</string>
+    <string name="network_kill_switch_restore">Restore the network</string>
+    <string name="network_kill_switch_restore_summary">Ends the block now and switches Wi-Fi and mobile data back on</string>
+    <string name="network_kill_switch_restored">Network restrictions lifted</string>
+    <string name="network_kill_switch_server_category">Remote control server</string>
+    <string name="network_kill_switch_server_enabled">Run the HTTP control server</string>
+    <string name="network_kill_switch_server_enabled_summary">Serves a control page on the local network for turning the network off</string>
+    <string name="network_kill_switch_server_port">Port</string>
+    <string name="network_kill_switch_bad_port">Use a port between 1024 and 65535. Ports below 1024 need root, which being device owner does not grant.</string>
+    <string name="network_kill_switch_server_address">Reachable at</string>
+    <string name="network_kill_switch_open_in_browser">%1$s\n\nOpen that in a browser on your own phone.</string>
+    <string name="network_kill_switch_require_token">Require a token</string>
+    <string name="network_kill_switch_require_token_summary">Off by default. The control page is meant to be opened in a browser on your home network, where a secret you have to type by hand costs more than it protects.</string>
+    <string name="network_kill_switch_server_off">Server is switched off</string>
+    <string name="network_kill_switch_no_address">No network address available</string>
+    <string name="network_kill_switch_token">Auth token</string>
+    <string name="network_kill_switch_token_none">Not generated yet</string>
+    <string name="network_kill_switch_token_summary">%1$s — tap to generate a new one</string>
+    <string name="network_kill_switch_token_regenerate">Generate a new token? Any script using the old one will stop working.</string>
+    <string name="network_kill_switch_no_data_control">Mobile data could not be switched off on this device; only Wi-Fi went down.</string>
+
 </resources>

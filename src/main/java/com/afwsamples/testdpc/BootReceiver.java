@@ -25,13 +25,22 @@ import com.afwsamples.testdpc.common.Util;
 import com.afwsamples.testdpc.comp.BindDeviceAdminServiceHelper;
 import com.afwsamples.testdpc.comp.DeviceOwnerService;
 import com.afwsamples.testdpc.comp.IDeviceOwnerService;
+import com.afwsamples.testdpc.parentalcontrol.ParentalControlService;
 
 public class BootReceiver extends BroadcastReceiver {
 
   @Override
   public void onReceive(Context context, Intent intent) {
     final String action = intent.getAction();
+    if (Intent.ACTION_MY_PACKAGE_REPLACED.equals(action)) {
+      // An in-place update stops the service and the system does not restart it.
+      ParentalControlService.startIfNeeded(context);
+      return;
+    }
     if (Intent.ACTION_BOOT_COMPLETED.equals(action)) {
+      // Screen time suspensions and the network block are device policy, so the platform has
+      // already restored them; this puts the service that maintains them back on its feet.
+      ParentalControlService.startIfNeeded(context);
       if (!Util.isProfileOwner(context)
           || Util.getBindDeviceAdminTargetUsers(context).size() == 0) {
         return;

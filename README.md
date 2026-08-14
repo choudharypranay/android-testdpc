@@ -86,6 +86,99 @@ TestDPC v9.0.5+ can be setup as Device Management Role Holder.
     Note: unlike DO/PO, this change is not persisted so TestDPC needs to be
     marked as role holder again if the device reboots.
 
+## Parental controls
+
+Two screens under **Parental controls** in the policy list, added for running a
+child's phone from a device owner where Digital Wellbeing is unavailable.
+
+### Screen time limits
+
+Choose which apps to watch from everything installed, system apps included,
+then set any combination of:
+
+*   a daily cap per app, for example two hours of YouTube
+*   a combined daily cap across every monitored app
+*   quiet hours, which may wrap past midnight, such as 22:00 to 08:00
+
+Apps that are not on the list are never touched, so the dialer and messaging
+keep working. Reaching a cap suspends the app with
+`DevicePolicyManager#setPackagesSuspended`: launching it then shows the
+platform's "blocked by your admin" dialog, and an app suspended while it is on
+screen drops back to the launcher. TestDPC also posts a friendlier notification
+of its own, since that system dialog cannot be reworded without a role-granted
+permission.
+
+Counters reset at local midnight, or on demand from the screen or the control
+page. Foreground time is derived from the usage event log rather than counted
+by a ticker, so it survives a reboot, a force stop and process death. Time does
+not accrue while the screen is locked or during quiet hours.
+
+**Usage access is required** and cannot be granted by a device owner, so grant
+it once per install:
+
+```console
+adb shell appops set com.afwsamples.testdpc android:get_usage_stats allow
+```
+
+The screen shows whether it is granted and links to the settings page. Without
+it the counters silently read zero rather than reporting an error.
+
+*Tamper protection* is an optional switch that pins the clock to network time
+and blocks force stop, uninstall and safe mode. Turn it off again before
+uninstalling.
+
+### Network kill switch
+
+Switches Wi-Fi and mobile data off for a chosen number of minutes and switches
+both back on when the time is up. Nothing is tunnelled or filtered; the radios
+themselves go down, so the phone leaves the network entirely and cannot be
+reached until the block expires. Ending one early is done on the device.
+
+Enable the control server on the screen and open the address it shows in a
+browser on another phone:
+
+```
+http://<phone-ip>:8080
+```
+
+The page picks a duration, reports whether the block actually took hold, shows
+today's screen time and can switch quiet hours on and off. A token can be
+required but is off by default, on the grounds that a secret typed by hand on a
+phone costs more than it protects on a home network. Ports below 1024 need
+root, so 8080 rather than 80.
+
+The same interface is scriptable, and `scripts/network_killswitch.py` drives
+it:
+
+```console
+python scripts/network_killswitch.py --host 192.168.1.15 off --minutes 30
+python scripts/network_killswitch.py --host 192.168.1.15 status
+```
+
+Confirming a cut is deliberately indirect. The phone answers 200, waits a
+second and only then pulls the network down; the client waits five seconds and
+probes `/ping`, where silence means success. A successful call destroys the
+channel it arrived on, so no reply could ever report it.
+
+There is no device owner API for the cellular data toggle, so that goes through
+`TelephonyManager` and the outcome is recorded rather than assumed. Wi-Fi is
+switched off through `WifiManager`, which the platform honours for a device
+owner.
+
+### Removing the app afterwards
+
+The application is marked `testOnly`, so a device owner provisioned from a
+build of this repository can be removed without a factory reset:
+
+```console
+adb shell dpm remove-active-admin com.afwsamples.testdpc/.DeviceAdminReceiver
+adb uninstall com.afwsamples.testdpc
+```
+
+This is recorded when the admin is set, not when the APK is installed, so a
+device provisioned from a build without the flag must be de-provisioned through
+the app's own "Remove this device owner" screen first.
+
 ## Android Studio import
 
 To import this repository in Android Studio, you need to use the 
@@ -108,8 +201,33 @@ You can now run the project from inside Android Studio.
 
 The repository includes a `build.sh` script to build the application. The required
 [setupdesign library](https://android.googlesource.com/platform/external/setupdesign/+/refs/heads/main)
-is now imported and patched dynamically using the command line utility `ed`. This needs to be
+is now imported and patched dynamically using the command line utility `sed`. This needs to be
 available on the path to successfully build the project.
+
+### Building on Windows
+
+`sed` comes with Git for Windows, so the patch step works from Git Bash. Bazel
+needs a JDK on `PATH` to fetch dependencies, and Android Studio's bundled one
+will do:
+
+```console
+export ANDROID_HOME="$LOCALAPPDATA/Android/Sdk"
+export JAVA_HOME="/c/Program Files/Android/Android Studio/jbr"
+export PATH="$JAVA_HOME/bin:$PATH"
+bazel build testdpc --java_runtime_version=remotejdk_17 --tool_java_runtime_version=remotejdk_17
+```
+
+If a build fails with "failed to delete output files ... Permission denied", a
+worker is still holding an output jar; `bazel shutdown` and retry.
+
+Installing needs `-t`, because the application is marked `testOnly`. Play
+Protect may also refuse the install, which can be turned off for the duration:
+
+```console
+adb shell settings put global verifier_verify_adb_installs 0
+adb install -r -t bazel-bin/testdpc.apk
+adb shell settings delete global verifier_verify_adb_installs
+```
 
 ### `ANDROID_HOME` environment setup
 

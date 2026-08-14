@@ -64,12 +64,15 @@
     <uses-permission android:name="android.permission.MANAGE_DEVICE_POLICY_WALLPAPER"/>
     <uses-permission android:name="android.permission.MANAGE_DEVICE_POLICY_WIFI"/>
     <uses-permission android:name="android.permission.UPDATE_DEVICE_MANAGEMENT_RESOURCES"/>
+    <!-- Lets the network kill switch lift itself on time even while the device is dozing. -->
+    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM"/>
 
     <uses-feature android:name="android.hardware.wifi" android:required="false" />
     <uses-feature android:name="android.hardware.touchscreen" android:required="false"/>
 
     <application
             android:allowBackup="true"
+            android:testOnly="true"
             android:icon="@drawable/ic_launcher"
             android:banner="@drawable/ic_launcher"
             android:theme="@style/AppTheme"
@@ -221,6 +224,8 @@
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.BOOT_COMPLETED"/>
+                <!-- An in-place update stops the parental control service; this restarts it. -->
+                <action android:name="android.intent.action.MY_PACKAGE_REPLACED"/>
             </intent-filter>
         </receiver>
 
@@ -298,6 +303,17 @@
             <action android:name="androidx.enterprise.feedback.action.APP_STATES" />
           </intent-filter>
         </service>
+
+        <!-- Parental controls: screen time limits and the network kill switch. -->
+        <service
+                android:name=".parentalcontrol.ParentalControlService"
+                android:exported="false"
+                android:foregroundServiceType="systemExempted"
+                tools:ignore="NewAPI"/>
+
+        <receiver
+                android:name=".parentalcontrol.KillSwitchExpiryReceiver"
+                android:exported="false"/>
 
     </application>
 
