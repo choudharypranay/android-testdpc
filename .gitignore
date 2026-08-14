@@ -5,3 +5,6 @@ bazel-testlogs
 **/*.iml
 .idea
 *.lock
+
+# Release artefacts are attached to GitHub releases, not committed.
+/release/*.apk
