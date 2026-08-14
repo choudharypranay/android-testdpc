@@ -64,7 +64,7 @@ removed with one adb command instead of a factory reset. **It will not install
 by tapping it** — use `-t`:
 
 ```console
-adb install -r -t testdpc-9.0.14-parental-controls.apk
+adb install -r -t testdpc-9.1.16-parental-controls.apk
 adb shell dpm set-device-owner com.afwsamples.testdpc/.DeviceAdminReceiver
 adb shell appops set com.afwsamples.testdpc android:get_usage_stats allow
 ```

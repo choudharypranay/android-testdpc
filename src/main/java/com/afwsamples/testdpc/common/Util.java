@@ -173,6 +173,37 @@ public class Util {
   }
 
   @TargetApi(VERSION_CODES.LOLLIPOP)
+  /**
+   * Grants a runtime permission to this app using the admin's own authority.
+   *
+   * <p>A device owner may grant itself runtime permissions outright, which is better than asking:
+   * the dialog can be permanently dismissed by the user, after which requesting it again does
+   * nothing except bounce through the permission activity.
+   *
+   * @return true if the permission is granted once this returns.
+   */
+  public static boolean tryGrantSelfPermission(Context context, String permission) {
+    if (context.checkSelfPermission(permission) == PackageManager.PERMISSION_GRANTED) {
+      return true;
+    }
+    if (SDK_INT < VERSION_CODES.M || !(isDeviceOwner(context) || isProfileOwner(context))) {
+      return false;
+    }
+    DevicePolicyManager dpm =
+        (DevicePolicyManager) context.getSystemService(Context.DEVICE_POLICY_SERVICE);
+    try {
+      dpm.setPermissionGrantState(
+          DeviceAdminReceiver.getComponentName(context),
+          context.getPackageName(),
+          permission,
+          DevicePolicyManager.PERMISSION_GRANT_STATE_GRANTED);
+    } catch (SecurityException | IllegalArgumentException e) {
+      Log.w(TAG, "Could not grant " + permission + " to ourselves", e);
+      return false;
+    }
+    return context.checkSelfPermission(permission) == PackageManager.PERMISSION_GRANTED;
+  }
+
   public static boolean isDeviceOwner(Context context) {
     final DevicePolicyManager dpm = getDevicePolicyManager(context);
     return dpm.isDeviceOwnerApp(context.getPackageName());

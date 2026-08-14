@@ -21,8 +21,8 @@ if "%~2"=="" (
 set "JAVA_HOME=C:\Program Files\Android\Android Studio\jbr"
 set "BUILD_TOOLS=%LOCALAPPDATA%\Android\Sdk\build-tools\35.0.0"
 set "HERE=%~dp0"
-set "UNSIGNED=%HERE%testdpc-9.0.14-parental-controls-unsigned.apk"
-set "SIGNED=%HERE%testdpc-9.0.14-parental-controls.apk"
+set "UNSIGNED=%HERE%testdpc-9.1.16-parental-controls-unsigned.apk"
+set "SIGNED=%HERE%testdpc-9.1.16-parental-controls.apk"
 
 if not exist "%JAVA_HOME%\bin\java.exe" (
   echo Could not find a JDK at "%JAVA_HOME%".

@@ -31,6 +31,7 @@ import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import com.afwsamples.testdpc.common.DumpableActivity;
 import com.afwsamples.testdpc.common.OnBackPressedHandler;
+import com.afwsamples.testdpc.common.Util;
 import com.afwsamples.testdpc.parentalcontrol.ParentalControlService;
 import com.afwsamples.testdpc.policy.PolicyManagementFragment;
 import com.afwsamples.testdpc.search.PolicySearchFragment;
@@ -60,6 +61,7 @@ public class PolicyManagementActivity extends DumpableActivity
     // Force stopping the app or updating it kills the parental control service without the system
     // bringing it back. Opening the app is the natural moment to put it on its feet again.
     ParentalControlService.startIfNeeded(this);
+    askNotificationPermission();
     if (savedInstanceState == null) {
       getFragmentManager()
           .beginTransaction()
@@ -99,8 +101,6 @@ public class PolicyManagementActivity extends DumpableActivity
     if (lockModeCommand != null) {
       setLockTaskMode(lockModeCommand);
     }
-
-    askNotificationPermission();
   }
 
   @Override
@@ -190,18 +190,53 @@ public class PolicyManagementActivity extends DumpableActivity
     }
   }
 
+  /**
+   * Makes sure the app can post notifications.
+   *
+   * <p>Called from {@code onCreate}, never from {@code onResume}. Asking on every resume loops:
+   * once the user has permanently refused, {@code requestPermissions} does not show a dialog, it
+   * just starts and finishes the permission activity, which resumes this one, which asks again.
+   * On the device that surfaced this the app flickered continuously and never became usable.
+   *
+   * <p>A device owner can grant the permission to itself, so that is tried first and the user is
+   * not asked at all in the normal case.
+   */
   private void askNotificationPermission() {
-    // This is only necessary for API level >= 33 (TIRAMISU)
-    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-      if (ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS)
-          == PackageManager.PERMISSION_GRANTED) {
-        Log.d(TAG, "Notification permission granted");
-      } else {
-        Log.e(TAG, "Notification permission missing");
-        // Directly ask for the permission
-        ActivityCompat.requestPermissions(
-            this, new String[] {Manifest.permission.POST_NOTIFICATIONS}, 101);
-      }
+    if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
+      return;
     }
+    if (Util.tryGrantSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS)) {
+      Log.d(TAG, "Notification permission granted");
+      return;
+    }
+    if (ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS)
+        == PackageManager.PERMISSION_GRANTED) {
+      return;
+    }
+    if (!ActivityCompat.shouldShowRequestPermissionRationale(
+            this, Manifest.permission.POST_NOTIFICATIONS)
+        && hasAlreadyAskedForNotifications()) {
+      // Refused for good. Asking again only bounces through the permission activity.
+      Log.w(TAG, "Notification permission was permanently declined; not asking again");
+      return;
+    }
+    rememberAskedForNotifications();
+    ActivityCompat.requestPermissions(
+        this, new String[] {Manifest.permission.POST_NOTIFICATIONS}, 101);
+  }
+
+  private static final String PREFS_LAUNCH = "policy_management_activity";
+  private static final String KEY_ASKED_NOTIFICATIONS = "asked_post_notifications";
+
+  private boolean hasAlreadyAskedForNotifications() {
+    return getSharedPreferences(PREFS_LAUNCH, MODE_PRIVATE)
+        .getBoolean(KEY_ASKED_NOTIFICATIONS, false);
+  }
+
+  private void rememberAskedForNotifications() {
+    getSharedPreferences(PREFS_LAUNCH, MODE_PRIVATE)
+        .edit()
+        .putBoolean(KEY_ASKED_NOTIFICATIONS, true)
+        .apply();
   }
 }

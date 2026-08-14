@@ -2224,10 +2224,16 @@ public class PolicyManagementFragment extends BaseSearchablePolicyPreferenceFrag
                     | BatteryManager.BATTERY_PLUGGED_USB
                     | BatteryManager.BATTERY_PLUGGED_WIRELESS))
             != 0;
-    mDevicePolicyManager.setGlobalSetting(
-        mAdminComponentName,
-        Settings.Global.STAY_ON_WHILE_PLUGGED_IN,
-        checked ? BATTERY_PLUGGED_ANY : DONT_STAY_ON);
+    // Runs from onResume. setGlobalSetting throws if the app is merely installed and not yet a
+    // device owner, which crashed the app on launch before provisioning.
+    try {
+      mDevicePolicyManager.setGlobalSetting(
+          mAdminComponentName,
+          Settings.Global.STAY_ON_WHILE_PLUGGED_IN,
+          checked ? BATTERY_PLUGGED_ANY : DONT_STAY_ON);
+    } catch (SecurityException e) {
+      Log.w(TAG, "Cannot set STAY_ON_WHILE_PLUGGED_IN; not an active admin yet", e);
+    }
     mStayOnWhilePluggedInSwitchPreference.setChecked(checked);
   }
 
@@ -2874,8 +2880,18 @@ public class PolicyManagementFragment extends BaseSearchablePolicyPreferenceFrag
 
   @TargetApi(VERSION_CODES.LOLLIPOP)
   private void reloadCameraDisableUi() {
-    boolean isCameraDisabled = mDevicePolicyManager.getCameraDisabled(mAdminComponentName);
-    mDisableCameraSwitchPreference.setChecked(isCameraDisabled);
+    // Runs from onCreatePreferences. getCameraDisabled resolves the admin component and throws if
+    // it is not an active admin, so a plain install that has not been provisioned yet would crash
+    // before the list is drawn. Every sibling reload guards on isEnabled(); these two did not.
+    if (!mDisableCameraSwitchPreference.isEnabled()) {
+      return;
+    }
+    try {
+      mDisableCameraSwitchPreference.setChecked(
+          mDevicePolicyManager.getCameraDisabled(mAdminComponentName));
+    } catch (SecurityException e) {
+      Log.w(TAG, "Cannot read the camera policy; not an active admin", e);
+    }
   }
 
   @TargetApi(VERSION_CODES.R)
@@ -2930,9 +2946,15 @@ public class PolicyManagementFragment extends BaseSearchablePolicyPreferenceFrag
 
   @TargetApi(VERSION_CODES.LOLLIPOP)
   private void reloadScreenCaptureDisableUi() {
-    boolean isScreenCaptureDisabled =
-        mDevicePolicyManager.getScreenCaptureDisabled(mAdminComponentName);
-    mDisableScreenCaptureSwitchPreference.setChecked(isScreenCaptureDisabled);
+    if (!mDisableScreenCaptureSwitchPreference.isEnabled()) {
+      return;
+    }
+    try {
+      mDisableScreenCaptureSwitchPreference.setChecked(
+          mDevicePolicyManager.getScreenCaptureDisabled(mAdminComponentName));
+    } catch (SecurityException e) {
+      Log.w(TAG, "Cannot read the screen capture policy; not an active admin", e);
+    }
   }
 
   @TargetApi(VERSION_CODES.R)
